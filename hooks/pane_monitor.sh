@@ -5,13 +5,15 @@
 #
 # 配置：通过环境变量或修改下方默认值
 #   CODEX_AGENT_CHAT_ID   — Chat ID (Telegram/Discord/WhatsApp etc.)
-#   CODEX_AGENT_NAME      — OpenClaw agent 名称（默认 main）
+#   CODEX_AGENT_CHANNEL   — 通道（默认 telegram）
+#   CODEX_AGENT_NAME      — OpenClaw agent 名称（优先）
+#   OPENCLAW_AGENT_ID     — OpenClaw 运行时 agent id（fallback）
 
 set -uo pipefail
 
 SESSION="${1:?Usage: $0 <tmux-session-name>}"
-CHAT_ID="${CODEX_AGENT_CHAT_ID:-YOUR_CHAT_ID}"
-AGENT_NAME="${CODEX_AGENT_NAME:-main}"
+CHAT_ID="${CODEX_AGENT_CHAT_ID:-${OPENCLAW_TELEGRAM_CHAT_ID:-YOUR_CHAT_ID}}"
+AGENT_NAME="${CODEX_AGENT_NAME:-${OPENCLAW_AGENT_ID:-main}}"
 CHANNEL="${CODEX_AGENT_CHANNEL:-telegram}"
 CHECK_INTERVAL=5  # 秒
 LAST_STATE=""

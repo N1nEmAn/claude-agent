@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Caller-aware routing: `start_codex.sh` now supports `./start_codex.sh <session> <workdir> [agent-name] [--full-auto]`, and injects `CODEX_AGENT_NAME/CODEX_AGENT_CHANNEL/CODEX_AGENT_CHAT_ID` into tmux + monitor.
+- Hook fallback support for runtime agent id: `on_complete.py` / `pane_monitor.sh` now read `OPENCLAW_AGENT_ID` when `CODEX_AGENT_NAME` is not set.
+
+### Changed
+- `on_complete.py`: route logging now includes `channel/target/agent` for easier callback debugging.
+- `INSTALL.md`: added "who triggers, who gets callback" setup/usage notes and dynamic validation commands.
+
 ## [0.2.0] - 2026-02-26
 
 ### Fixed

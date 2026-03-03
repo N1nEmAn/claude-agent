@@ -52,7 +52,7 @@ notify = ["python3", "/Users/你的用户名/.openclaw/workspace/skills/codex-ag
 ```bash
 export CODEX_AGENT_CHAT_ID="你的Chat_ID"
 export CODEX_AGENT_CHANNEL="telegram"   # 支持 telegram / discord / whatsapp / slack 等 OpenClaw 通道
-export CODEX_AGENT_NAME="main"          # OpenClaw agent 名称，通常是 main
+export CODEX_AGENT_NAME="main"          # OpenClaw agent 名称（可按任务切换）
 ```
 
 然后 `source ~/.zshrc`。
@@ -65,13 +65,31 @@ export CODEX_AGENT_NAME="main"          # OpenClaw agent 名称，通常是 main
 ```python
 CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "你的Chat_ID")
 CHANNEL = os.environ.get("CODEX_AGENT_CHANNEL", "telegram")
+AGENT_NAME = os.environ.get("CODEX_AGENT_NAME", os.environ.get("OPENCLAW_AGENT_ID", "main"))
 ```
 
 编辑 `hooks/pane_monitor.sh`，修改：
 ```bash
 CHAT_ID="${CODEX_AGENT_CHAT_ID:-你的Chat_ID}"
 CHANNEL="${CODEX_AGENT_CHANNEL:-telegram}"
+AGENT_NAME="${CODEX_AGENT_NAME:-${OPENCLAW_AGENT_ID:-main}}"
 ```
+
+### 可选：按“谁触发就回给谁”路由
+
+如果你希望不同 OpenClaw agent 各自收到自己的 Codex 回调，启动时显式传 `agent-name`：
+
+```bash
+bash hooks/start_codex.sh <session-name> <workdir> <agent-name> --full-auto
+```
+
+例如：
+
+```bash
+bash hooks/start_codex.sh codex-research /path/to/repo research --full-auto
+```
+
+这会把 `CODEX_AGENT_NAME=research` 注入到 tmux/codex/monitor，任务完成后回调会唤醒 `research`，而不是固定 `main`。
 
 ## 第四步：配置 OpenClaw session 重置
 
@@ -119,7 +137,7 @@ tmux -V
 openclaw message send --channel telegram --target YOUR_CHAT_ID --message "✅ codex-agent 通知测试"
 
 # 4. OpenClaw agent 可唤醒
-openclaw agent --agent main --message "✅ codex-agent 唤醒测试" --deliver --channel telegram --timeout 10
+openclaw agent --agent ${CODEX_AGENT_NAME:-main} --message "✅ codex-agent 唤醒测试" --deliver --channel telegram --timeout 10
 
 # 5. Codex notify hook 可触发（在任意 git 目录下）
 cd /tmp && mkdir -p codex-test && cd codex-test && git init
@@ -164,7 +182,7 @@ OpenClaw 会：
 | 症状 | 检查 |
 |------|------|
 | Codex 完成后没收到通知 | 检查 `~/.codex/config.toml` 的 notify 路径是否正确 |
-| 收到通知但 OpenClaw 没反应 | 检查 `openclaw agent --agent main` 是否可用 |
+| 收到通知但 OpenClaw 没反应 | 检查 `openclaw agent --agent ${CODEX_AGENT_NAME:-main}` 是否可用 |
 | pane monitor 没检测到审批 | 查看 `/tmp/codex_monitor_<session>.log` |
 | start_codex.sh 报错 | 检查 tmux 和 codex 是否安装，workdir 是否存在 |
 | `--full-auto` 报冲突 | 检查 `~/.zshrc` 是否有 codex alias |

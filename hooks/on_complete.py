@@ -4,9 +4,11 @@ Codex notify hook — Codex 完成 turn 时：
 1. 给用户发 Telegram 通知（看到 Codex 干了什么）
 2. 唤醒 OpenClaw agent（去检查输出）
 
-配置：通过环境变量或修改下方默认值
+配置：通过环境变量（推荐）
   CODEX_AGENT_CHAT_ID   — Chat ID (Telegram/Discord/WhatsApp etc.)
-  CODEX_AGENT_NAME      — OpenClaw agent 名称（默认 main）
+  CODEX_AGENT_CHANNEL   — 通道（默认 telegram）
+  CODEX_AGENT_NAME      — OpenClaw agent 名称（优先）
+  OPENCLAW_AGENT_ID     — OpenClaw 运行时 agent id（fallback）
 """
 
 import json
@@ -17,10 +19,19 @@ from datetime import datetime
 
 LOG_FILE = "/tmp/codex_notify_log.txt"
 
+
+def env_nonempty(*keys: str) -> str:
+    for key in keys:
+        value = os.environ.get(key, "").strip()
+        if value:
+            return value
+    return ""
+
+
 # 从环境变量读取，fallback 到默认值（方便部署时不改代码）
-CHAT_ID = os.environ.get("CODEX_AGENT_CHAT_ID", "YOUR_CHAT_ID")
-CHANNEL = os.environ.get("CODEX_AGENT_CHANNEL", "telegram")
-AGENT_NAME = os.environ.get("CODEX_AGENT_NAME", "main")
+CHAT_ID = env_nonempty("CODEX_AGENT_CHAT_ID", "OPENCLAW_TELEGRAM_CHAT_ID") or "YOUR_CHAT_ID"
+CHANNEL = env_nonempty("CODEX_AGENT_CHANNEL") or "telegram"
+AGENT_NAME = env_nonempty("CODEX_AGENT_NAME", "OPENCLAW_AGENT_ID") or "main"
 
 
 def log(msg: str):
@@ -98,7 +109,10 @@ def main() -> int:
     cwd = notification.get("cwd", "unknown")
     thread_id = notification.get("thread-id", "unknown")
 
-    log(f"Codex turn complete: thread={thread_id}, cwd={cwd}")
+    log(
+        f"Codex turn complete: thread={thread_id}, cwd={cwd}, "
+        f"channel={CHANNEL}, target={CHAT_ID}, agent={AGENT_NAME}"
+    )
     log(f"Summary: {summary[:200]}")
 
     # ⚠️ 注意：summary 可能包含代码片段、路径、密钥等敏感信息
