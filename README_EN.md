@@ -78,3 +78,11 @@ After setup, just tell OpenClaw in Telegram:
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed (`claude --version`)
 - tmux installed
 - Telegram configured as OpenClaw message channel
+
+## Acknowledgments
+
+This project is based on [codex-agent](https://github.com/dztabel-happy/codex-agent), originally created by [@dztabel-happy](https://github.com/dztabel-happy). codex-agent implemented the complete workflow for operating OpenAI Codex CLI via OpenClaw — including the tmux + hook dual-channel notification architecture, knowledge base maintenance system, and project-manager-style multi-step task execution.
+
+claude-agent inherits the core architectural design of codex-agent, migrating the target CLI from OpenAI Codex to Anthropic Claude Code, adapting to Claude Code's hooks system, permission model, and settings.json configuration format.
+
+Thanks to the original author for the excellent work.

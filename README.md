@@ -241,3 +241,11 @@ git pull
 - [ ] 补充更多提示词模式（代码审查、架构设计）
 - [ ] pane monitor 支持更多审批模式检测
 - [ ] 支持 Claude Code 多 session 并行管理
+
+## 致谢
+
+本项目基于 [codex-agent](https://github.com/dztabel-happy/codex-agent) 改造而来。codex-agent 由 [@dztabel-happy](https://github.com/dztabel-happy) 原创，实现了通过 OpenClaw 操作 OpenAI Codex CLI 的完整工作流（tmux + hook 双通道通知架构、知识库维护体系、项目经理式多步骤任务执行）。
+
+claude-agent 继承了 codex-agent 的核心架构设计，将目标 CLI 从 OpenAI Codex 迁移到 Anthropic Claude Code，适配了 Claude Code 的 hooks 系统、权限模型和 settings.json 配置格式。
+
+感谢原作者的出色工作。
