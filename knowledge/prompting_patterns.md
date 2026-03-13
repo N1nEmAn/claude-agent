@@ -1,12 +1,12 @@
-# Codex 提示词模式库
+# Claude Code 提示词模式库
 
-> 最后更新: 2026-02-24
+> 最后更新: 2026-03-13
 
 ## 提示词设计原则
 
-1. **明确任务边界**：告诉 Codex 做什么、不做什么
+1. **明确任务边界**：告诉 Claude Code 做什么、不做什么
 2. **提供上下文**：相关文件路径、技术栈、约束条件
-3. **利用工具链**：根据任务显式调用 skills、MCP、搜索
+3. **利用工具链**：根据任务显式指定 MCP 工具、搜索等
 4. **分阶段执行**：复杂任务拆分为步骤，逐步确认
 
 ## 标准任务模板
@@ -51,18 +51,17 @@ Bug 描述：<问题现象>
 ### 代码审查
 
 ```
-/review
-```
-或非交互式：
-```bash
-codex review --base origin/main
-codex review --uncommitted
+审查当前目录的代码变更，关注：
+1. 安全问题
+2. 代码质量
+3. 潜在 bug
+4. 性能问题
 ```
 
 ### 需要搜索的任务
 
 ```
-$exa 搜索 <关键词> 了解最新的 <技术/方案>，然后基于搜索结果 <执行任务>
+搜索 <关键词> 了解最新的 <技术/方案>，然后基于搜索结果 <执行任务>
 ```
 
 ### 多文件重构
@@ -76,54 +75,55 @@ $exa 搜索 <关键词> 了解最新的 <技术/方案>，然后基于搜索结�
 涉及文件：
 - <文件列表或 glob 模式>
 
-使用 /plan 模式先分析影响范围，确认后再执行。
+先分析影响范围，确认后再执行。
 ```
 
 ## 提示词增强技巧
 
-### 利用 Codex 特有功能
+### 利用 Claude Code 特有功能
 
 | 场景 | 技巧 |
 |------|------|
-| 需要精确分析 | 先 `/plan` 分析，确认后再执行 |
-| 需要网络信息 | 确保 `web_search = "live"`，prompt 中提示搜索 |
-| 处理 Excel/数据 | `$skill_name` 显式调用 |
-| 浏览器操作 | 通过 chrome-mcp-server 操作 |
-| 深度搜索 | 通过 exa MCP 的 deep_search/deep_researcher |
+| 需要精确分析 | 让 Claude Code 先分析再执行，分步骤 |
+| 需要网络信息 | 使用 WebSearch/WebFetch 工具 |
+| 处理大项目 | 使用 Agent 工具并行子任务 |
+| 需要浏览网页 | 使用 WebFetch 或 MCP 浏览器工具 |
 | 多步骤任务 | 明确步骤编号，每步完成后确认 |
 
 ### 上下文管理
 
 | 场景 | 操作 |
 |------|------|
-| 上下文快满 | `/compact` 压缩历史 |
-| 需要引用文件 | `/mention <file>` 附带文件内容 |
-| 需要看当前状态 | `/status` 查看 token 用量 |
-| 需要看改动 | `/diff` 查看 git diff |
+| 上下文快满 | 交互模式中 `/compact` 压缩历史 |
+| 需要持久化知识 | 使用 CLAUDE.md 或 `/memory` |
+| 查看费用 | 交互模式中 `/cost` |
 
 ### 模型切换时机
 
 | 从 | 切到 | 时机 |
 |----|------|------|
-| xhigh | high | 前期分析完成，进入简单实现阶段 |
-| xhigh | medium | 重复性修改、格式化 |
-| high | xhigh | 遇到难题、架构决策 |
+| opus | sonnet | 分析完成，进入简单实现阶段 |
+| sonnet | haiku | 重复性修改、格式化 |
+| sonnet | opus | 遇到难题、架构决策 |
 
-## exec 模式提示词
+## print 模式提示词
 
 ```bash
-# 标准全自动执行
-codex exec --full-auto "任务描述"
+# 标准自动执行
+claude -p --dangerously-skip-permissions "任务描述"
 
 # 指定模型
-codex exec --full-auto -m gpt-5.2 "任务描述"
+claude -p --model claude-opus-4-6 "任务描述"
 
-# 指定工作目录
-codex exec --full-auto -C /path/to/project "任务描述"
+# 限制轮次
+claude -p --max-turns 20 "任务描述"
 
-# 运行时覆盖配置
-codex exec --full-auto -c 'model_reasoning_effort="xhigh"' "任务描述"
+# JSON 输出
+claude -p --output-format json "任务描述"
 
-# 附带图片
-codex exec --full-auto -i screenshot.png "根据截图修复 UI"
+# 附加系统提示
+claude -p --system-prompt "你是一个代码审查专家" "审查这段代码"
+
+# 组合使用
+claude -p --dangerously-skip-permissions --model claude-opus-4-6 --max-turns 30 "复杂任务描述"
 ```

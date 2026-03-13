@@ -1,44 +1,52 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.0.0] - 2026-03-13
+
+### Changed (Breaking)
+- **CLI Migration**: From OpenAI Codex CLI to Anthropic Claude Code CLI
+- **Config Format**: From `~/.codex/config.toml` (TOML) to `~/.claude/settings.json` (JSON)
+- **Hook Mechanism**: From Codex notify hook (argv JSON) to Claude Code Stop hook (stdin JSON)
+- **Models**: From GPT series to Claude series (opus / sonnet / haiku)
+- **Permissions**: From sandbox + approval policy to permissions.allow/deny
+- **Non-interactive Mode**: From `codex exec` to `claude -p`
+- **Auto-approve**: From `--full-auto` to `--dangerously-skip-permissions`
+
+### Added
+- `hooks/start_claude.sh` — One-click launcher for Claude Code
+- `hooks/stop_claude.sh` — One-click cleanup for Claude Code
+- `references/claude-code-reference.md` — Claude Code CLI reference
+
+### Removed
+- `hooks/start_codex.sh` — Replaced by start_claude.sh
+- `hooks/stop_codex.sh` — Replaced by stop_claude.sh
+- `references/codex-cli-reference.md` — Replaced by claude-code-reference.md
+
+### Rewritten
+- `SKILL.md` — Complete rewrite for Claude Code workflow
+- `hooks/on_complete.py` — Adapted for stdin JSON input
+- `hooks/pane_monitor.sh` — Adapted for Claude Code permission prompts
+- `knowledge/*` — All 6 files rewritten for Claude Code
+- `workflows/*` — Adapted for Claude Code
+- `README.md`, `README_EN.md`, `INSTALL.md` — Complete rewrite
 
 ## [0.2.0] - 2026-02-26
 
 ### Fixed
-- `start_codex.sh`: Added `set -euo pipefail` and return code checks, no longer falsely reports success
-- `pane_monitor.sh`: Fixed `if ! ... & then` syntax error causing wake failure detection to never trigger
-- `on_complete.py`: Changed `stdout/stderr=PIPE` to `DEVNULL` for fire-and-forget agent wake (prevents EPIPE)
-- `stop_codex.sh`: Added proper quoting for PID file reads
-- `pane_monitor.sh`: PID file auto-cleanup on exit via `trap cleanup EXIT`
-- `standard_task.md`: Fixed send-keys examples to use separate text and Enter (with sleep 1s)
-- `knowledge_update.md`: Fixed `cache/` path to `/tmp/codex-knowledge-cache/` with auto `mkdir`
-- `SKILL.md`: Updated chat ID references from hardcoded to environment variables
-- `state/version.txt`: Added trailing newline
+- `start_codex.sh`: Added `set -euo pipefail` and return code checks
+- `pane_monitor.sh`: Fixed syntax error causing wake failure detection issue
+- `on_complete.py`: Changed to DEVNULL for fire-and-forget agent wake
 
 ### Added
-- `INSTALL.md`: Complete 7-step installation guide with troubleshooting
-- `README_EN.md`: Full English README with language switcher
-- Environment variable support: `CODEX_AGENT_CHAT_ID` and `CODEX_AGENT_NAME` (no code changes needed for deployment)
-- `on_complete.py`: Telegram notify now checks exit code and logs stderr on failure
-- `pane_monitor.sh`: Increased capture lines from 15 to 30, added more approval keywords
-- `pane_monitor.sh`: Per-session log file (`/tmp/codex_monitor_<session>.log`)
-- `start_codex.sh`: Pre-flight check for `codex` binary
-- `stop_codex.sh`: Precise `pkill` regex to avoid killing unrelated processes
-- OpenClaw session reset configuration note in README and INSTALL.md
-
-### Changed
-- All README references changed from "Agent" to "OpenClaw" for clarity
-- Quick start section now points users to read `INSTALL.md` first
-- Send-to-OpenClaw prompt updated to reference INSTALL.md for auto-configuration
+- `INSTALL.md`: Complete 7-step installation guide
+- `README_EN.md`: Full English README
+- Environment variable support: `CODEX_AGENT_CHAT_ID` and `CODEX_AGENT_NAME`
 
 ## [0.1.0] - 2026-02-25
 
 ### Added
-- Initial release
+- Initial release as codex-agent
 - SKILL.md: 8-step workflow engine for OpenClaw to operate Codex CLI
-- Dual-channel notification: Codex notify hook (`on_complete.py`) + tmux pane monitor (`pane_monitor.sh`)
-- One-click start/stop scripts (`start_codex.sh`, `stop_codex.sh`)
-- Knowledge base: 6 files covering features, config schema, capabilities, prompt patterns, update protocol, changelog
-- Workflows: standard task execution + knowledge base update (7-step process with 5-tier data sources)
-- Two approval modes: Codex auto (`--full-auto`) or OpenClaw approval
-- tmux persistence: Codex runs independent of OpenClaw turn lifecycle
+- Dual-channel notification: notify hook + tmux pane monitor
+- One-click start/stop scripts
+- Knowledge base: 6 files
+- Two approval modes: auto and OpenClaw-managed

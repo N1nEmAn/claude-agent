@@ -1,11 +1,11 @@
 #!/bin/bash
-# Codex 一键清理
-# 用法: ./stop_codex.sh <session-name>
+# Claude Code 一键清理
+# 用法: ./stop_claude.sh <session-name>
 
 set -uo pipefail
 
 SESSION="${1:?Usage: $0 <session-name>}"
-MONITOR_PID_FILE="/tmp/codex_monitor_${SESSION}.pid"
+MONITOR_PID_FILE="/tmp/claude_monitor_${SESSION}.pid"
 
 # 杀 pane monitor
 if [ -f "$MONITOR_PID_FILE" ]; then
@@ -27,4 +27,4 @@ else
 fi
 
 # 清理日志（可选，取消注释启用）
-# rm -f "/tmp/codex_monitor_${SESSION}.log"
+# rm -f "/tmp/claude_monitor_${SESSION}.log"

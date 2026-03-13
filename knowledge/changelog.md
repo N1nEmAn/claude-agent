@@ -1,50 +1,53 @@
-# Codex 版本变更追踪
+# Claude Code 版本变更追踪
 
-## 2026-02-25 — 知识库 v1 完成 + 通知系统验证
+## 2026-03-13 — 知识库 v1 完成（从 codex-agent 移植）
 
 ### 本次完成
 
+- [x] 从 codex-agent 移植为 claude-agent
 - [x] 知识库 6 文件建成（features/config_schema/capabilities/prompting_patterns/UPDATE_PROTOCOL/changelog）
-- [x] SKILL.md 重写为完整工作流引擎（exec + TUI 双模式）
-- [x] notify hook（on_complete.py）验证通过：Telegram 双通道（message send + agent wake）
-- [x] pane monitor（pane_monitor.sh）审批检测验证通过：Telegram 双通道
-- [x] Enter 时序问题解决：文本和 Enter 分两次 send-keys，中间 sleep 1s
-- [x] exec 模式 fire-and-forget 验证通过
-- [x] TUI + full-auto 模式验证通过
-- [x] TUI + 默认审批 + pane monitor 验证通过
-- [x] Codex memories 评估：不适用（disable_response_storage + custom provider）
+- [x] SKILL.md 重写为 Claude Code 完整工作流（print + 交互双模式）
+- [x] on_complete.py 适配 Claude Code hooks（stdin JSON）
+- [x] pane_monitor.sh 适配 Claude Code 权限提示检测
+- [x] start_claude.sh / stop_claude.sh 一键管理脚本
+- [x] Enter 时序规则保留（文本和 Enter 分两次 send-keys，中间 sleep 1s）
 
-### notify payload 实测字段（比官方文档多）
+### Claude Code vs Codex 关键差异
 
-```json
-{
-  "type": "agent-turn-complete",
-  "thread-id": "uuid",
-  "turn-id": "uuid",          // 官方文档未提及
-  "cwd": "/path/to/workdir",  // 官方文档未提及
-  "last-assistant-message": "...",
-  "input-messages": ["..."]
-}
-```
-
-### 已知模型迁移提示
-
-config.toml 中的 `[notice.model_migrations]`：
-- `gpt-5.2` → `gpt-5.3-codex`
-- `gpt-5.1-codex-max` → `gpt-5.2-codex`
-
-### 已知配置问题
-
-- `request_rule = true` 在 `[features]` 中，官方文档说 stable/on by default，但 CLI features list 标记 removed，待观察
+| 维度 | Codex | Claude Code |
+|------|-------|------------|
+| CLI 命令 | `codex` | `claude` |
+| 非交互模式 | `codex exec` | `claude -p` |
+| 自动审批 | `--full-auto` | `--dangerously-skip-permissions` |
+| 配置文件 | `~/.codex/config.toml`（TOML） | `~/.claude/settings.json`（JSON） |
+| 项目指令 | `AGENTS.md` | `CLAUDE.md` |
+| Hook 机制 | `notify` config（argv JSON） | `hooks.Stop`（stdin JSON） |
+| 模型 | gpt-5.2 | opus / sonnet / haiku |
+| Feature Flags | 30+ flags | 无（功能内置） |
+| TUI 标志 | `--no-alt-screen` | 不需要 |
+| 权限系统 | 沙盒 + 审批策略 | permissions.allow/deny |
 
 ### 待补充
 
-- [ ] Codex CLI Features 页面详细功能说明 (https://developers.openai.com/codex/cli/features)
-- [ ] Advanced Config 页面 (https://developers.openai.com/codex/config-advanced)
-- [ ] Rules 系统 (https://developers.openai.com/codex/rules)
-- [ ] Non-interactive Mode 详细参数 (https://developers.openai.com/codex/noninteractive)
-- [ ] Codex SDK (https://developers.openai.com/codex/sdk)
-- [ ] Custom Prompts (https://developers.openai.com/codex/custom-prompts)
-- [ ] 本机已安装的 Skills 完整列表（需进入交互模式 `/skills` 查看）
-- [ ] notify hook 实际联通测试
-- [ ] openclaw CLI 通知命令格式确认
+- [ ] 测试 pane_monitor.sh 与 Claude Code TUI 的权限提示匹配准确性
+
+### Claude Code Stop Hook 实测 Payload
+
+```json
+{
+  "session_id": "uuid",
+  "transcript_path": "/path/to/transcript",
+  "cwd": "/path/to/workdir",
+  "permission_mode": "dangerously-skip-permissions",
+  "hook_event_name": "Stop",
+  "stop_hook_active": true,
+  "last_assistant_message": "Claude Code 的回复内容"
+}
+```
+
+关键发现：
+- 字段名是 `last_assistant_message`（下划线），不是 `last-assistant-message`（连字符，Codex 用法）
+- `hook_event_name` 替代了 Codex 的 `type` 字段
+- 没有 `stop_reason` 字段，有 `stop_hook_active` 布尔值
+- `permission_mode` 字段标识当前权限模式
+- Hook 通过 **stdin** 接收 JSON（Codex 通过 argv）
